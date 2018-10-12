@@ -1,39 +1,34 @@
 # frozen_string_literal: true
 
-require 'http'
+require 'httparty'
 require 'yaml'
 
 config = YAML.safe_load(File.read('config/secrets.yml'))
+headers = { 'Authorization' => "Bearer #{config['FB_TOKEN']}" }
 
-def news_api_country(country)
-  'https://newsapi.org/v2/top-headlines?country=' + country
+def fb_api_url(keywords)
+  "https://graph.facebook.com/v3.1/search?type=place&fields=name,checkins,picture&q=#{keywords}&center=24.7943758,120.9715205&distance=10000"
 end
 
-def call_news_url(config, url)
-  HTTP.headers(
-    'Authorization' => "token #{config['NEWS_TOKEN']}"
-  ).get(url)
+def call_fb_url(headers, url)
+  HTTParty.get(url, :headers => headers)
 end
 
-news_response = {}
-news_results = {}
+fb_response = {}
+fb_results = {}
 
 ## happy requests
-project_url = news_api_country('tw')
-news_response[project_url] = call_news_url(config, project_url)
-project = news_response[project_url].parse
+project_url = fb_api_url('sea')
+fb_response[project_url] = call_fb_url(headers, project_url)
+project = JSON.parse(fb_response[project_url])
 
-news_results['status'] = project['status']
-#should be ok
-
-news_results['totalResults'] = project['totalResults']
-#should be 20
-
+fb_results['data'] = project['data']
+#should not be nil
 
 ## bad request
-bad_project_url = news_api_country('apple')
-news_response[bad_project_url] = call_news_url(config, bad_project_url)
-news_response[bad_project_url].parse
+bad_project_url = fb_api_url('error')
+fb_response[bad_project_url] = call_fb_url(headers, bad_project_url)
+fb_response[bad_project_url] = JSON.parse(fb_response[bad_project_url])
 
-File.write('spec/fixtures/news_response.yml', news_response.to_yaml)
-File.write('spec/fixtures/news_results.yml', news_results.to_yaml)
+File.write('spec/fixtures/fb_response.yml', fb_response.to_yaml)
+File.write('spec/fixtures/fb_results.yml', fb_results.to_yaml)
