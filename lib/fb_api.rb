@@ -8,13 +8,13 @@ module FacebookPlaces
   class FacebookAPI
     # Define our own errors
     module Errors
-      class NotFound < StandardError; end
+      class Nilclass < Nilclass; end
       class Unauthorized < StandardError; end
     end
     # Map HTTP codes to classes
     HTTP_ERROR = {
       401 => Errors::Unauthorized,
-      404 => Errors::NotFound
+      204 => Errors::Nilclass
     }.freeze
 
     # Initialize API library with token and cache object
